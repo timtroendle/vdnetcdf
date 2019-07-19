@@ -6,10 +6,7 @@ A VisiData plugin for reading NetCDF files.
 
 ## User Guide
 
-vdnetcdf has the following features:
-
-*
-*
+Early prototype that let's you read NetCDF files within VisiData.
 
 ### Installation
 
@@ -20,9 +17,17 @@ from GitHub.
 pip install git+git://github.com/timtroendle/vdnetcdf@develop
 ```
 
+Then, update your VisiData config file by adding this line:
+
+```Python
+from vdnetcdf import open_nc
+```
+
 ### Usage Example
 
-...
+```
+vd some-data.nc
+```
 
 ## Developer Guide
 
@@ -31,6 +36,8 @@ pip install git+git://github.com/timtroendle/vdnetcdf@develop
 Best install `vdnetcdf` in editable mode:
 
     $ pip install -r requirements-test.txt
+
+Add `vdnetcdf` to your VisiData config, see above.
 
 ### Run the test suite
 
