@@ -5,10 +5,10 @@ from visidata import Sheet, Column, ColumnItem, Progress, anytype, asyncthread, 
 
 
 def open_nc(path):
-    return VariablesSheet(path.name, source=path)
+    return DatasetSheet(path.name, source=path)
 
 
-class VariablesSheet(Sheet):
+class DatasetSheet(Sheet):
     rowtype = 'variables'  # rowdef: xr.DataArray
 
     columns = [
@@ -25,7 +25,7 @@ class VariablesSheet(Sheet):
             self.rows.append((r[0], r[1], vs))
 
 
-VariablesSheet.addCommand(ENTER, 'dive-row', 'vd.push(cursorRow[2])')
+DatasetSheet.addCommand(ENTER, 'dive-row', 'vd.push(cursorRow[2])')
 
 
 class DataArraySheet(Sheet):
@@ -40,12 +40,23 @@ class DataArraySheet(Sheet):
 
         for dim in da.dims:
             self.addColumn(ColumnItem(dim, type=type_mapping(da[dim].dtype)))
+        for non_dim_coords in [coords for coords in da.coords if coords not in da.dims]:
+            self.addColumn(Column(
+                non_dim_coords,
+                type=type_mapping(da[non_dim_coords].dtype),
+                getter=lambda col, row: get_non_dim_coord_value(da, non_dim_coords, row)),
+            )
         self.addColumn(Column(da.name, type=type_mapping(da.dtype), getter=lambda col, row: da.loc[row]))
 
         number_rows = reduce(lambda x, y: x * y, da.sizes.values())
         coords_iterator = product(*[da.coords[dim].values for dim in da.dims])
         for coords in Progress(coords_iterator, total=number_rows):
             self.addRow(dict(zip(list(da.dims), coords)))
+
+
+def get_non_dim_coord_value(da, non_dim_coords, row):
+    index = {k: v for k, v in row.items() if k in da[non_dim_coords].dims}
+    return da[non_dim_coords].loc[index].item()
 
 
 def type_mapping(dtype):
