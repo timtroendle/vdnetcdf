@@ -1,3 +1,6 @@
+from itertools import product
+from functools import reduce
+
 from visidata import Sheet, Column, ColumnItem, Progress, anytype, asyncthread, ENTER
 
 
@@ -26,23 +29,23 @@ VariablesSheet.addCommand(ENTER, 'dive-row', 'vd.push(cursorRow[2])')
 
 
 class DataArraySheet(Sheet):
-    rowtype = 'data'  # rowdef: pd.DataFrame row
+    rowtype = 'data'  # rowdef: coords mapping
 
     @asyncthread
     def reload(self):
         da = self.source
-        df = da.to_dataframe().reset_index()
 
         self.columns = []
         self.rows = []
 
-        rows = [row for idx, row in df.iterrows()]
+        for dim in da.dims:
+            self.addColumn(ColumnItem(dim, type=type_mapping(da[dim].dtype)))
+        self.addColumn(Column(da.name, type=type_mapping(da.dtype), getter=lambda col, row: da.loc[row]))
 
-        for column in df:
-            self.addColumn(ColumnItem(column, type=type_mapping(df[column].dtype)))
-
-        for r in Progress(rows):
-            self.addRow(r)
+        number_rows = reduce(lambda x, y: x * y, da.sizes.values())
+        coords_iterator = product(*[da.coords[dim].values for dim in da.dims])
+        for coords in Progress(coords_iterator, total=number_rows):
+            self.addRow(dict(zip(list(da.dims), coords)))
 
 
 def type_mapping(dtype):
