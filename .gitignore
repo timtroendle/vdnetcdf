@@ -1,0 +1,11 @@
+# Python
+*.pyc
+build/
+dist/
+__pycache__
+*.egg-info
+.cache/
+
+# Jupyter Notebook
+notebooks/.ipynb_checkpoints
+

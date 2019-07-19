@@ -1,0 +1,11 @@
+language: python
+dist: xenial # for Py37, see https://github.com/travis-ci/travis-ci/issues/9815
+sudo: true # for Py37, see https://github.com/travis-ci/travis-ci/issues/9815
+
+python:
+    - "3.6"
+    - "3.7"
+
+install: pip install -r requirements-test.txt
+
+script: py.test
