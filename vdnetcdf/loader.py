@@ -14,6 +14,8 @@ class DatasetSheet(Sheet):
     columns = [
         Column('variable', getter=lambda col, row: row[0]),
         Column('dtype', getter=lambda col, row: row[1].dtype),
+        Column('dimensions', getter=lambda col, row: row[1].dims),
+        Column('size', getter=lambda col, row: row[1].size)
     ]
 
     def reload(self):
