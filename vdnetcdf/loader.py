@@ -31,7 +31,7 @@ DatasetSheet.addCommand(ENTER, 'dive-row', 'vd.push(cursorRow[2])')
 
 
 class DataArraySheet(Sheet):
-    rowtype = 'data'  # rowdef: coords mapping
+    rowtype = 'data'  # rowdef: map
 
     @asyncthread
     def reload(self):
@@ -42,23 +42,20 @@ class DataArraySheet(Sheet):
 
         for dim in da.dims:
             self.addColumn(ColumnItem(dim, type=type_mapping(da[dim].dtype)))
-        for non_dim_coords in [coords for coords in da.coords if coords not in da.dims]:
-            self.addColumn(Column(
-                non_dim_coords,
-                type=type_mapping(da[non_dim_coords].dtype),
-                getter=lambda col, row: get_non_dim_coord_value(da, non_dim_coords, row)),
-            )
-        self.addColumn(Column(da.name, type=type_mapping(da.dtype), getter=lambda col, row: da.loc[row]))
+        non_dim_coords = [coords for coords in da.coords if coords not in da.dims]
+        for non_dim_coord in non_dim_coords:
+            self.addColumn(ColumnItem(non_dim_coord, type=type_mapping(da[non_dim_coord].dtype)))
+        self.addColumn(ColumnItem(da.name, type=type_mapping(da.dtype)))
 
         number_rows = reduce(lambda x, y: x * y, da.sizes.values())
-        coords_iterator = product(*[da.coords[dim].values for dim in da.dims])
+        coords_iterator = product(*(da.coords[dim].values for dim in da.dims))
         for coords in Progress(coords_iterator, total=number_rows):
-            self.addRow(dict(zip(list(da.dims), coords)))
-
-
-def get_non_dim_coord_value(da, non_dim_coords, row):
-    index = {k: v for k, v in row.items() if k in da[non_dim_coords].dims}
-    return da[non_dim_coords].loc[index].item()
+            row = dict(zip(list(da.dims), coords))
+            row[da.name] = da.loc[row].item()
+            for non_dim_coord in non_dim_coords:
+                idx = {k: v for k, v in row.items() if k in da[non_dim_coord].dims}
+                row[non_dim_coord] = da[non_dim_coord].loc[idx].item()
+            self.addRow(row)
 
 
 def type_mapping(dtype):
