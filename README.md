@@ -29,6 +29,8 @@ from vdnetcdf import open_nc
 vd some-data.nc
 ```
 
+Open attributes of Datasets or DataArrays with the `show-attributes` (`^A`) command.
+
 ## Developer Guide
 
 ### Installation

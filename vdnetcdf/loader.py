@@ -1,4 +1,4 @@
-from visidata import Sheet, Column, ColumnItem, anytype, date, asyncthread, ENTER
+from visidata import Sheet, Column, ColumnItem, anytype, date, asyncthread, Progress, ENTER
 
 
 def open_nc(path):
@@ -23,8 +23,10 @@ class DatasetSheet(Sheet):
             vs = DataArraySheet(r[0], source=r[1])
             self.rows.append((r[0], r[1], vs))
 
-
-DatasetSheet.addCommand(ENTER, 'dive-row', 'vd.push(cursorRow[2])')
+    def attributeSheet(self):
+        import xarray as xr
+        ds = xr.open_dataset(str(self.source))
+        return AttributeSheet(f"{self.name}-attrs", source=ds)
 
 
 class DataArraySheet(Sheet):
@@ -41,6 +43,29 @@ class DataArraySheet(Sheet):
         self.addColumn(ColumnItem(da.name, type=type_mapping(da.dtype)))
 
         self.rows = da.to_dataframe().reset_index().to_dict(orient="records")
+
+    def attributeSheet(self):
+        return AttributeSheet(f"{self.name}-attrs", source=self.source)
+
+
+class AttributeSheet(Sheet):
+    rowtype = 'attributes'  # rowdef: attributes
+
+    columns = [
+        Column('key', getter=lambda col, row: row[0]),
+        Column('value', getter=lambda col, row: row[1]),
+    ]
+
+    @asyncthread
+    def reload(self):
+        self.rows = []
+        for k, v in Progress(self.source.attrs.items()):
+            self.rows.append((k, v))
+
+
+DatasetSheet.addCommand(ENTER, 'dive-row', 'vd.push(cursorRow[2])')
+DatasetSheet.addCommand('^A', 'show-attributes', 'vd.push(attributeSheet())')
+DataArraySheet.addCommand('^A', 'show-attributes', 'vd.push(attributeSheet())')
 
 
 def type_mapping(dtype):
