@@ -1,4 +1,4 @@
-from visidata import Sheet, Column, ColumnItem, anytype, asyncthread, ENTER
+from visidata import Sheet, Column, ColumnItem, anytype, date, asyncthread, ENTER
 
 
 def open_nc(path):
@@ -44,9 +44,12 @@ class DataArraySheet(Sheet):
 
 
 def type_mapping(dtype):
-    if dtype.str[1] == "f":
+    type_char = dtype.str[1]
+    if type_char == "f":
         return float
-    elif dtype.str[1] == "i":
+    elif type_char == "i":
         return int
+    elif type_char == "M":
+        return date
     else:
         return anytype
