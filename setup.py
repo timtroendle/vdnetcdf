@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='vdnetcdf',
-    version='0.1.0.dev',
+    version='0.1.0',
     description='A VisiData plugin for reading NetCDF files.',
     maintainer='Tim Tröndle',
     maintainer_email='tim.troendle@usys.ethz.ch',
